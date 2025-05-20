@@ -1,0 +1,12 @@
+[project]
+name = "az-content-understanding"
+version = "0.1.0"
+description = "Azure Content Understanding sample client"
+requires-python = ">=3.10"
+dependencies = [
+    "requests",
+    "python-dotenv"
+]
+
+[tool.uv]
+# uv-specific settings can be added here if needed
