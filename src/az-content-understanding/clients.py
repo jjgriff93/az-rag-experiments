@@ -1,35 +1,68 @@
 import requests
-from requests.models import Response
 import logging
 import json
 import time
+import os
+
+from requests.models import Response
 from pathlib import Path
+from collections.abc import Callable
+from typing import Optional
+from dotenv import load_dotenv
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from langchain_openai import AzureOpenAIEmbeddings
+from langchain_community.vectorstores import AzureSearch
+
+
+load_dotenv()
+
+credential = DefaultAzureCredential()
+azure_token_provider = get_bearer_token_provider(
+    credential, "https://cognitiveservices.azure.com/.default"
+)
+
+
+def get_vector_store():
+    aoai_embeddings = AzureOpenAIEmbeddings(
+        azure_deployment=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME"),
+        api_version=os.getenv(
+            "AZURE_OPENAI_EMBEDDING_API_VERSION", "2023-12-01-preview"
+        ),
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        azure_ad_token_provider=azure_token_provider,
+    )
+
+    vector_store: AzureSearch = AzureSearch(
+        azure_search_endpoint=os.getenv("AZURE_SEARCH_ENDPOINT", ""),
+        azure_search_key=None,
+        index_name=os.getenv("AZURE_SEARCH_INDEX_NAME", "salesrag"),
+        embedding_function=aoai_embeddings.embed_query,
+    )
+
+    return vector_store
 
 
 class AzureContentUnderstandingClient:
     def __init__(
         self,
-        endpoint: str,
-        api_version: str,
-        subscription_key: str = None,
-        token_provider: callable = None,
-        x_ms_useragent: str = "cu-sample-code",
+        endpoint: str = os.getenv("AZURE_AI_SERVICE_ENDPOINT", ""),
+        api_version: str = os.getenv(
+            "AZURE_AI_SERVICE_API_VERSION", "2024-12-01-preview"
+        ),
+        subscription_key: Optional[str] = None,
+        token_provider: Optional[Callable[[], str]] = None,
+        x_ms_useragent: str = "az-rag-experiments/az-content-understanding",
     ):
         if not subscription_key and not token_provider:
-            raise ValueError(
-                "Either subscription key or token provider must be provided."
-            )
-        if not api_version:
-            raise ValueError("API version must be provided.")
+            token_provider = azure_token_provider
         if not endpoint:
             raise ValueError("Endpoint must be provided.")
 
         self._endpoint = endpoint.rstrip("/")
         self._api_version = api_version
         self._logger = logging.getLogger(__name__)
-        self._headers = self._get_headers(
-            subscription_key, token_provider(), x_ms_useragent
-        )
+        api_token = token_provider() if token_provider else None
+        self._headers = self._get_headers(subscription_key, api_token, x_ms_useragent)
 
     def _get_analyzer_url(self, endpoint, api_version, analyzer_id):
         return f"{endpoint}/contentunderstanding/analyzers/{analyzer_id}?api-version={api_version}"  # noqa
@@ -111,7 +144,7 @@ class AzureContentUnderstandingClient:
     def begin_create_analyzer(
         self,
         analyzer_id: str,
-        analyzer_template: dict = None,
+        analyzer_template: Optional[dict] = None,
         analyzer_template_path: str = "",
         training_storage_container_sas_url: str = "",
         training_storage_container_path_prefix: str = "",

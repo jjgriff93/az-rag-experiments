@@ -5,13 +5,5 @@ metadata:
   template: az-rag-exp-content-understanding@0.0.1
 hooks:
   postprovision:
-    windows:
-      shell: pwsh
-      run: ./infra/write_dot_env.ps1
-      interactive: false
-      continueOnError: false
-    posix:
-      shell: sh
-      run: sh infra/write_dot_env.sh
-      interactive: false
-      continueOnError: false
+    - run: ./infra/write_dot_env.sh
+    - run: .venv/bin/python ingest_documents.py

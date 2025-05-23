@@ -1,0 +1,42 @@
+{
+    "description": "Sales materials analyzer",
+    "scenario": "document",
+    "fieldSchema": {
+        "name": "SalesDocs",
+        "descriptions": "Understand and extract content from sales documents.",
+        "fields": {
+            "Title": {
+                "type": "string",
+                "method": "generate",
+                "description": "Title of the document."
+            },
+            "Summary": {
+                "type": "string",
+                "method": "generate",
+                "description": "A brief summary of the document content as a whole."
+            },
+            "Topics": {
+                "type": "string",
+                "method": "generate",
+                "description": "Key topics discussed in the document (comma-delimited)"
+            },
+            "ContentType": {
+                "type": "string",
+                "method": "classify",
+                "description": "Type of material.",
+                "enum": [
+                    "salesDeck",
+                    "whitepaper",
+                    "productInfo",
+                    "internalSalesGuide"
+                ],
+                "enumDescriptions": {
+                    "salesDeck": "Customer-facing sales presentation (typically landscape and graphical) that positions a product or service, it's benefits / value for use cases",
+                    "whitepaper": "Customer-facing whitepaper (an informational document typically A4, more text heavy and research-based), detailing the research and value of a product or service",
+                    "productInfo": "Documents with specifications and information about a product or service, for supporting employees in answering customer questions and queries",
+                    "internalSalesGuide": "Internal document with information/guidance on sales process, either general or product/service specific"
+                }
+            }
+        }
+    }
+}

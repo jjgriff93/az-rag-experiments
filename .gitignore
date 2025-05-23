@@ -75,3 +75,6 @@ venv.bak/
 *.pkl
 *.h5
 *.env
+
+# Ignore azd artifacts
+.azure/

@@ -1,0 +1,7 @@
+[
+  {
+    "id": "salesdoc-analyzer",
+    "template_path": "analyzer_templates/sales_document.json",
+    "location": "analyzer_templates/sample_layout.pdf"
+  }
+]
